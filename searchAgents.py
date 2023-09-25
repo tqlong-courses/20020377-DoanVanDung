@@ -534,10 +534,10 @@ class ClosestDotSearchAgent(SearchAgent):
                 legal = currentState.getLegalActions()
                 if action not in legal:
                     t = (str(action), str(currentState))
-                    raise Exception('findPathToClosestDot returned an illegal move: %s!\n%s' % t )
+                    raise Exception('findPathToClosestDot returned an illegal move: %s!\n%s' % t)
                 currentState = currentState.generateSuccessor(0, action)
         self.actionIndex = 0
-        print ('Path found with cost %d.' % len(self.actions))
+        print('Path found with cost %d.' % len(self.actions))
 
     def findPathToClosestDot(self, gameState):
         """
@@ -549,12 +549,9 @@ class ClosestDotSearchAgent(SearchAgent):
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-        temp = food.asList()
 
-        from search import breadthFirstSearch
-
-        # Bfs finds closest food first. #
-        return breadthFirstSearch(problem) # Return actions
+        # Solving the problem using BFS, is the most suitable choice
+        return search.breadthFirstSearch(problem)
 
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -588,16 +585,9 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
+        x,y = state         # Any state with a food dot, is also a goal state
+        return self.food[x][y]
 
-        # List of food. List of tuples. Position of every food #
-        foodL = self.food.asList()
-
-        # State reach food #
-        if state in foodL:
-            return True
-        else:
-            return False
 
 def mazeDistance(point1, point2, gameState):
     """
