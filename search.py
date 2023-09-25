@@ -1,5 +1,7 @@
 # search.py
-# ---------
+# ----------------------------------
+# Pavlos Spanoudakis(sdi1800184)
+# ----------------------------------
 # Licensing Information:  You are free to use or extend these projects for
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
@@ -16,8 +18,9 @@
 In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
-
 import util
+from util import*
+
 
 class SearchProblem:
     """
@@ -72,99 +75,95 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
-def depthFirstSearch(problem):
-    """
-    Search the deepest nodes in the search tree first.
+def depthFirstSearch(problem: SearchProblem):
+    """ Search the deepest nodes in the search tree first. """
+    currPath = []           # The path that is popped from the frontier in each loop
+    currState =  problem.getStartState()
 
-    Your search algorithm needs to return a list of actions that reaches the
-    goal. Make sure to implement a graph search algorithm.
+    if problem.isGoalState(currState):     # Checking if the start state is also a goal state
+        return currPath
 
-    To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
+    frontier = Stack()
+    frontier.push( (currState, currPath) )     # Insert just the start state, in order to pop it first
+    explored = set()
+    while not frontier.isEmpty():
+        currState, currPath = frontier.pop()    # Popping a state and the corresponding path
+        # To pass autograder.py question1:
+        if problem.isGoalState(currState):
+            return currPath
+        explored.add(currState)
+        for s in problem.getSuccessors(currState):
+            if s[0] not in explored:
+                # Lecture code:
+                # if problem.isGoalState(s[0]):
+                #     return currPath + [s[1]]
+                frontier.push( (s[0], currPath + [s[1]]) )      # Adding the successor and its path to the frontier
 
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
-    """
+    return []       # If this point is reached, a solution could not be found.
 
-    "*** YOUR CODE HERE ***"
+def breadthFirstSearch(problem: SearchProblem):
+    """ Search the shallowest nodes in the search tree first. """
+    currPath = []           # The path that is popped from the frontier in each loop
+    currState =  problem.getStartState()    # The state(position) that is popped for the frontier in each loop
 
-    startingNode = problem.getStartState()
-    if problem.isGoalState(startingNode):
-        return []
+    if problem.isGoalState(currState):     # Checking if the start state is also a goal state
+        return currPath
 
-    myQueue = util.Stack()
-    visitedNodes = []
-    # (node,actions)
-    myQueue.push((startingNode, []))
+    frontier = Queue()
+    frontier.push( (currState, currPath) )     # Insert just the start state, in order to pop it first
+    explored = set()
+    while not frontier.isEmpty():
+        currState, currPath = frontier.pop()    # Popping a state and the corresponding path
+        # To pass autograder.py question2:
+        if problem.isGoalState(currState):
+            return currPath
+        explored.add(currState)
+        frontierStates = [ t[0] for t in frontier.list ]
+        for s in problem.getSuccessors(currState):
+            if s[0] not in explored and s[0] not in frontierStates:
+                # Lecture code:
+                # if problem.isGoalState(s[0]):
+                #     return currPath + [s[1]]
+                frontier.push( (s[0], currPath + [s[1]]) )      # Adding the successor and its path to the frontier
 
-    while not myQueue.isEmpty():
-        currentNode, actions = myQueue.pop()
-        if currentNode not in visitedNodes:
-            visitedNodes.append(currentNode)
+    return []       # If this point is reached, a solution could not be found.
 
-            if problem.isGoalState(currentNode):
-                return actions
+def uniformCostSearch(problem: SearchProblem):
+    """ Search the node of least total cost first. """
+    currPath = []           # The path that is popped from the frontier in each loop
+    currState = problem.getStartState()     # The state(position) that is popped for the frontier in each loop
+    frontier = PriorityQueue()
+    frontier.push((currState, currPath), 0)
+    explored = set()
 
-            for nextNode, action, cost in problem.getSuccessors(currentNode):
-                newAction = actions + [action]
-                myQueue.push((nextNode, newAction))
+    while not frontier.isEmpty():
+        currState, currPath = frontier.pop()
+        if problem.isGoalState(currState):
+            return currPath
+        explored.add(currState)
+        frontierStates = [ i[2][0] for i in frontier.heap ]     # frontier.heap[i][2] is the state tuple: (position, path)
+        for s in problem.getSuccessors(currState):
+            successorPath = currPath + [s[1]]        # The path to the new successor
+            if s[0] not in explored and s[0] not in frontierStates:
+                frontier.push( (s[0], successorPath), problem.getCostOfActions(successorPath) )
+            else:
+                # The same state already exists
+                for i in range(0, len(frontierStates)):
+                    # Finding it
+                    if s[0] == frontierStates[i]:
+                        # The stored path and the new path costs have to be compared
+                        updatedCost = problem.getCostOfActions(successorPath)
+                        storedCost = frontier.heap[i][0]    # frontier.heap[i] is a tuple: (cost, counter, (node, path))
+                        if storedCost > updatedCost:
+                            # The cost must be updated
+                            # Plus, (s[0], <stored_path>) must be changed to (s[0], successorPath)
+                            # Tuples are immutable, so frontier.heap[i] must be reconstructed
+                            # First we manually change just the path, while keeping the cost unchanged
+                            frontier.heap[i] = (storedCost, frontier.heap[i][1] , (s[0], successorPath) )
+                            # and then we update the cost
+                            frontier.update( (s[0], successorPath), updatedCost )
 
-def breadthFirstSearch(problem):
-    """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-
-    startingNode = problem.getStartState()
-    if problem.isGoalState(startingNode):
-        return []
-
-    myQueue = util.Queue()
-    visitedNodes = []
-    # (node,actions)
-    myQueue.push((startingNode, []))
-
-    while not myQueue.isEmpty():
-        currentNode, actions = myQueue.pop()
-        if currentNode not in visitedNodes:
-            visitedNodes.append(currentNode)
-
-            if problem.isGoalState(currentNode):
-                return actions
-
-            for nextNode, action, cost in problem.getSuccessors(currentNode):
-                newAction = actions + [action]
-                myQueue.push((nextNode, newAction))
-
-    util.raiseNotDefined()
-
-def uniformCostSearch(problem):
-    "Search the node of least total cost first. "
-    "*** YOUR CODE HERE ***"
-
-    startingNode = problem.getStartState()
-    if problem.isGoalState(startingNode):
-        return []
-
-    visitedNodes = []
-
-    pQueue = util.PriorityQueue()
-    #((coordinate/node , action to current node , cost to current node),priority)
-    pQueue.push((startingNode, [], 0), 0)
-
-    while not pQueue.isEmpty():
-
-        currentNode, actions, prevCost = pQueue.pop()
-        if currentNode not in visitedNodes:
-            visitedNodes.append(currentNode)
-
-            if problem.isGoalState(currentNode):
-                return actions
-
-            for nextNode, action, cost in problem.getSuccessors(currentNode):
-                newAction = actions + [action]
-                priority = prevCost + cost
-                pQueue.push((nextNode, newAction, priority),priority)
-    util.raiseNotDefined()
+    return []       # If this point is reached, a solution could not be found.
 
 def nullHeuristic(state, problem=None):
     """
@@ -173,37 +172,46 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-def aStarSearch(problem, heuristic=nullHeuristic):
-    """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
+def evalFunction(problem: SearchProblem, state, actions, heuristicFunction):
+    """ Evaluates each state by its path cost + the heuristic cost. """
+    return problem.getCostOfActions(actions) + heuristicFunction(state, problem)
 
-    startingNode = problem.getStartState()
-    if problem.isGoalState(startingNode):
-        return []
+def aStarSearch(problem: SearchProblem, heuristic = nullHeuristic, eval = evalFunction):
+    """ Search the node that has the lowest combined cost and heuristic first. """
+    currPath = []       # The path that is popped from the frontier in each loop
+    currState = problem.getStartState()     # The state(position) that is popped for the frontier in each loop
+    frontier = PriorityQueue()
+    frontier.push( (currState, currPath), eval(problem, currState, currPath, heuristic) )
+    explored = set()
 
-    visitedNodes = []
+    while not frontier.isEmpty():
+        currState, currPath = frontier.pop()
+        if problem.isGoalState(currState):
+            return currPath
+        explored.add(currState)
+        frontierStates = [ i[2][0] for i in frontier.heap ]     # frontier.heap[i][2] is the state tuple: (position, path)
+        for s in problem.getSuccessors(currState):
+            successorPath = currPath + [s[1]]        # The path to the new successor
+            if s[0] not in explored and s[0] not in frontierStates:
+                frontier.push( (s[0], successorPath), eval(problem, s[0], successorPath, heuristic) )
+            else:
+                # The same state already exists
+                for i in range(0, len(frontierStates)):
+                    # Finding it
+                    if s[0] == frontierStates[i]:
+                        # The stored path and the new path costs have to be compared
+                        updatedCost = eval(problem, s[0], successorPath, heuristic)
+                        storedCost = frontier.heap[i][0]    # frontier.heap[i] is a tuple: (cost, counter, (node, path))
+                        if storedCost > updatedCost:
+                            # The cost must be updated
+                            # Plus, (s[0], <stored_path>) must be changed to (s[0], successorPath)
+                            # Tuples are immutable, so frontier.heap[i] must be reconstructed
+                            # First we manually change just the path, while keeping the cost unchanged
+                            frontier.heap[i] = (storedCost, frontier.heap[i][1] , (s[0], successorPath) )
+                            # and then we update the cost
+                            frontier.update( (s[0], successorPath), updatedCost )
 
-    pQueue = util.PriorityQueue()
-    #((coordinate/node , action to current node , cost to current node),priority)
-    pQueue.push((startingNode, [], 0), 0)
-
-    while not pQueue.isEmpty():
-
-        currentNode, actions, prevCost = pQueue.pop()
-
-        if currentNode not in visitedNodes:
-            visitedNodes.append(currentNode)
-
-            if problem.isGoalState(currentNode):
-                return actions
-
-            for nextNode, action, cost in problem.getSuccessors(currentNode):
-                newAction = actions + [action]
-                newCostToNode = prevCost + cost
-                heuristicCost = newCostToNode + heuristic(nextNode,problem)
-                pQueue.push((nextNode, newAction, newCostToNode),heuristicCost)
-
-    util.raiseNotDefined()
+    return []       # If this point is reached, a solution could not be found.
 
 
 # Abbreviations
