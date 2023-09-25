@@ -36,6 +36,8 @@ description for details.
 Good luck and happy searching!
 """
 
+from turtle import distance
+from typing import Self
 from game import Directions
 from game import Agent
 from game import Actions
@@ -461,16 +463,10 @@ class FoodSearchProblem:
                 return 999999
             cost += 1
         return cost
-
-
 class AStarFoodSearchAgent(SearchAgent):
-    "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
-    def __init__(self):
-        self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
-        self.searchType = FoodSearchProblem
+        Self.searchType = FoodSearchProblem
 
-
-def foodHeuristic(state, problem: FoodSearchProblem):
+def foodHeuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
 
