@@ -78,7 +78,7 @@ class SearchAgent(Agent):
 
         # Get the search function from the name and heuristic
         if fn not in dir(search):
-            raise AttributeError(fn + ' is not a search function in search.py.', )
+            raise AttributeError(fn + ' is not a search function in search.py.')
         func = getattr(search, fn)
         if 'heuristic' not in func.func_code.co_varnames:
             print('[SearchAgent] using function ' + fn)
@@ -96,7 +96,7 @@ class SearchAgent(Agent):
 
         # Get the search problem type from the name
         if prob not in globals().keys() or not prob.endswith('Problem'):
-            raise AttributeError(prob + ' is not a search problem type in SearchAgents.py.' )
+            raise AttributeError(prob + ' is not a search problem type in SearchAgents.py.')
         self.searchType = globals()[prob]
         print('[SearchAgent] using problem type ' + prob)
 
@@ -109,7 +109,7 @@ class SearchAgent(Agent):
 
         state: a GameState object (pacman.py)
         """
-        if self.searchFunction == None: raise Exception("No search function provided for SearchAgent" )
+        if self.searchFunction == None: raise Exception("No search function provided for SearchAgent")
         starttime = time.time()
         problem = self.searchType(state) # Makes a new search problem
         self.actions  = self.searchFunction(problem) # Find a path
@@ -160,6 +160,7 @@ class PositionSearchProblem(search.SearchProblem):
         self.visualize = visualize
         if warn and (gameState.getNumFood() != 1 or not gameState.hasFood(*goal)):
             print ('Warning: this does not look like a regular search maze')
+
         # For display purposes
         self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
 
@@ -534,7 +535,7 @@ class ClosestDotSearchAgent(SearchAgent):
                 legal = currentState.getLegalActions()
                 if action not in legal:
                     t = (str(action), str(currentState))
-                    raise Exception('findPathToClosestDot returned an illegal move: %s!\n%s' % t )
+                    raise Exception( 'findPathToClosestDot returned an illegal move: %s!\n%s' % t)
                 currentState = currentState.generateSuccessor(0, action)
         self.actionIndex = 0
         print ('Path found with cost %d.' % len(self.actions))
@@ -588,8 +589,16 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state         # Any state with a food dot, is also a goal state
-        return self.food[x][y]
+        x,y = state
+
+        # List of food. List of tuples. Position of every food #
+        foodL = self.food.asList()
+
+        # State reach food #
+        if state in foodL:
+            return True
+        else:
+            return False
 
 def mazeDistance(point1, point2, gameState):
     """
